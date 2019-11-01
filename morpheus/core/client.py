@@ -173,3 +173,11 @@ class Client:
             content['formatted_body'] = formatted_body
 
         await self.send_room_message(room=room, content=content)
+
+    # TODO send_emote
+    # TODO send_notice
+    # TODO send_image
+    # TODO send_file
+    # TODO send_audio
+    # TODO send_location
+    # TODO send_video

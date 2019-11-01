@@ -93,5 +93,13 @@ class Room:
     async def send_text(self, body: str, formatted_body: str = None, format_type: str = 'org.matrix.custom.html'):
         await self.client.send_text(self, body, formatted_body, format_type)
 
+    # TODO send_emote
+    # TODO send_notice
+    # TODO send_image
+    # TODO send_file
+    # TODO send_audio
+    # TODO send_location
+    # TODO send_video
+
     def __eq__(self, other):
         return other.__class__ == self.__class__ and other.id == self.id
