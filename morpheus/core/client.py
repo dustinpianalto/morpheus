@@ -19,7 +19,7 @@ class Client:
         self.rooms: Dict[str, Room] = {}
         self.api: Optional[API] = None
         self.running: bool = False
-        self.sync_timeout: int = 1000
+        self.sync_timeout: int = 30000
         self.sync_since: Optional[str] = None
         self.sync_full_state: bool = False
         self.sync_set_presence: str = "online"
@@ -159,3 +159,17 @@ class Client:
         if not callable(handler):
             raise TypeError(f'handler must be a callable not {type(handler)}')
         self.event_dispatchers[event_type] = handler
+
+    async def send_room_message(self, room: Room, content: dict):
+        await self.api.room_send(room_id=room.id, event_type='m.room.message', content=content)
+
+    async def send_text(self, room: Room, body: str, formatted_body: str = None, format_type: str = None):
+        content = {
+            'msgtype': 'm.text',
+            'body': body
+        }
+        if formatted_body and format_type:
+            content['format'] = format_type
+            content['formatted_body'] = formatted_body
+
+        await self.send_room_message(room=room, content=content)

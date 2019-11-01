@@ -154,14 +154,15 @@ class API:
         self.access_token = None
 
     async def room_send(self, room_id: str, event_type: str, content: dict):
+        txnid = uuid.uuid4()
         if room_id.startswith("!") and ":" in room_id:
-            path = self.build_url(f"rooms/{room_id}/send/{event_type}/{uuid.uuid4()}")
+            path = self.build_url(f"rooms/{room_id}/send/{event_type}/{txnid}")
         elif room_id.startswith("#") and ":" in room_id:
             path = self.build_url(f"directory/room/{room_id}")
             resp = await self.send("GET", path)
             if resp.get("room_id"):
                 path = self.build_url(
-                    f'rooms/{resp["room_id"]}/send/{event_type}/{uuid.uuid4()}'
+                    f'rooms/{resp["room_id"]}/send/{event_type}/{txnid}'
                 )
             else:
                 raise RuntimeWarning(resp)
