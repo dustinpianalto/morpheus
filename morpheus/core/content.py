@@ -86,8 +86,8 @@ class MVideoContent(MessageContentBase):
 @dataclass
 class PresenceContent(ContentBase):
     presence: str
-    last_active_ago: int
-    currently_active: bool
+    last_active_ago: int = 0
+    currently_active: bool = True
     avatar_url: Optional[str] = None
     displayname: Optional[str] = None
     status_message: Optional[str] = None
