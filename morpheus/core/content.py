@@ -11,7 +11,8 @@ from .utils import (
     PreviousRoom,
     Invite,
     ReactionRelation,
-    notification_power_levels_default_factory
+    notification_power_levels_default_factory,
+    MessageRelation
 )
 
 
@@ -31,6 +32,7 @@ class MTextContent(MessageContentBase):
     format: Optional[str] = None
     formatted_body: Optional[str] = None
     msgtype = "m.text"
+    relates_to: Optional[MessageRelation] = None
 
 
 @dataclass

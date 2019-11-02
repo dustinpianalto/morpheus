@@ -92,5 +92,10 @@ class ReactionRelation:
     key: str
 
 
+@dataclass
+class MessageRelation:
+    event_id: str
+
+
 def notification_power_levels_default_factory():
     return {'room': 50}

@@ -4,7 +4,7 @@ from typing import Optional, List
 from .client import Client
 from .room import Room
 from .content import ContentBase
-from .utils import ReactionRelation
+from .utils import ReactionRelation, MessageRelation
 
 
 @dataclass
@@ -28,6 +28,17 @@ class EventBase:
             content_dict = {'options': event_dict['content']}
         else:
             content_dict = event_dict['content']
+
+        if content_dict.get('m.relates_to'):
+            if content_dict['m.relates_to'].get('m.in_reply_to'):
+                content_dict['relates_to'] = MessageRelation(
+                    event_id=content_dict['m.relates_to']['m.in_reply_to']['event_id']
+                )
+            del content_dict['m.relates_to']
+
+        if content_dict.get('m.new_content'):
+            del content_dict['m.new_content']
+
         del event_dict['content']
 
         return cls(

@@ -1,7 +1,7 @@
 import asyncio
 from typing import Union, Optional, Dict
 
-from .api import API, APIConfig
+from .api import API
 from .room import Room
 
 
@@ -111,6 +111,10 @@ class Client:
                 handler = self.event_dispatchers.get(event.type)
                 if handler:
                     await self.invoke(handler, event)
+                try:
+                    await self.mark_event_read(event)
+                except RuntimeError as e:
+                    pass
 
             # Process ephemeral events
             for event in data['ephemeral']['events']:
@@ -159,6 +163,14 @@ class Client:
         if not callable(handler):
             raise TypeError(f'handler must be a callable not {type(handler)}')
         self.event_dispatchers[event_type] = handler
+
+    async def mark_event_read(self, event, receipt_type: str = 'm.read'):
+        from .events import RoomEvent
+        if isinstance(event, RoomEvent):
+            path = self.api.build_url(f'rooms/{event.room.id}/receipt/{receipt_type}/{event.event_id}')
+            await self.api.send('POST', path)
+        else:
+            raise RuntimeError(f'Event to mark read must be an instance of RoomEvent. Not {type(event)}')
 
     async def send_room_message(self, room: Room, content: dict):
         await self.api.room_send(room_id=room.id, event_type='m.room.message', content=content)
