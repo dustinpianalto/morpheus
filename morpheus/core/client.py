@@ -1,5 +1,5 @@
 import asyncio
-from typing import Union, Optional, Dict
+from typing import Union, Optional, Dict, List
 
 from .api import API
 from .room import Room
@@ -30,10 +30,16 @@ class Client:
             "rooms": self.process_room_events,
             "groups": self.process_group_events,
         }
-        self.event_dispatchers: Dict[str, callable] = {}
+        self.event_dispatchers: Dict[str, List[callable]] = {}
         self.users = []
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
 
-    async def run(self, user_id: str = None, password: str = None, token: str = None):
+    async def run(self, user_id: str = None, password: str = None, token: str = None, loop: Optional[asyncio.AbstractEventLoop] = None):
+        if loop:
+            self.loop = loop
+        elif not self.loop:
+            self.loop = asyncio.get_event_loop()
+
         if not password and not token:
             raise RuntimeError("Either the password or a token is required")
         self.user_id = user_id
@@ -95,9 +101,10 @@ class Client:
                 event_dict["room"] = room
                 event = self.process_event(event_dict)
                 await room.update_state(event)
-                handler = self.event_dispatchers.get(event.type)
-                if handler:
-                    await self.invoke(handler, event)
+                handlers = self.event_dispatchers.get(event.type)
+                if handlers:
+                    for handler in handlers:
+                        self.loop.create_task(self.invoke(handler, event))
 
             # Process ephemeral events
             for event in data['ephemeral']['events']:
@@ -118,9 +125,10 @@ class Client:
                     if event not in room.message_cache:
                         room.message_cache.append(event)
                 if room.read_receipts[self.user_id][1] < event.origin_server_ts:
-                    handler = self.event_dispatchers.get(event.type)
-                    if handler:
-                        await self.invoke(handler, event)
+                    handlers = self.event_dispatchers.get(event.type)
+                    if handlers:
+                        for handler in handlers:
+                            self.loop.create_task(self.invoke(handler, event))
                     try:
                         await self.mark_event_read(event)
                     except RuntimeError as e:
@@ -161,9 +169,15 @@ class Client:
         await handler(event)
 
     def register_handler(self, event_type, handler: callable):
+        if not event_type:
+            event_type = handler.__name__.replace('_', '.')
+
         if not callable(handler):
             raise TypeError(f'handler must be a callable not {type(handler)}')
-        self.event_dispatchers[event_type] = handler
+        if event_type in self.event_dispatchers:
+            self.event_dispatchers[event_type].append(handler)
+        else:
+            self.event_dispatchers[event_type] = [handler]
 
     async def mark_event_read(self, event, receipt_type: str = 'm.read'):
         from .events import RoomEvent

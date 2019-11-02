@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional, List, Dict
+from inspect import isawaitable
 
 
 @dataclass
@@ -95,6 +96,14 @@ class ReactionRelation:
 @dataclass
 class MessageRelation:
     event_id: str
+
+
+async def maybe_coroutine(func, *args, **kwargs):
+    f = func(*args, **kwargs)
+    if isawaitable(f):
+        return await f
+    else:
+        return f
 
 
 def notification_power_levels_default_factory():
