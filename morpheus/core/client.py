@@ -99,6 +99,15 @@ class Client:
                 if handler:
                     await self.invoke(handler, event)
 
+            # Process ephemeral events
+            for event in data['ephemeral']['events']:
+                if event['type'] == 'm.receipt':
+                    room.update_read_receipts(event['content'])
+                    # TODO Update read receipts for users
+                elif event['type'] == 'm.typing':
+                    # TODO process typing messages
+                    pass
+
             # Process timeline
             for event_dict in data["timeline"]["events"]:
                 event_dict["room"] = room
@@ -108,22 +117,14 @@ class Client:
                 elif isinstance(event, MessageEvent):
                     if event not in room.message_cache:
                         room.message_cache.append(event)
-                handler = self.event_dispatchers.get(event.type)
-                if handler:
-                    await self.invoke(handler, event)
-                try:
-                    await self.mark_event_read(event)
-                except RuntimeError as e:
-                    pass
-
-            # Process ephemeral events
-            for event in data['ephemeral']['events']:
-                if event['type'] == 'm.receipt':
-                    room.update_read_receipts(event['content'])
-                    # TODO Update read receipts for users
-                elif event['type'] == 'm.typing':
-                    # TODO process typing messages
-                    pass
+                if room.read_receipts[self.user_id][1] < event.origin_server_ts:
+                    handler = self.event_dispatchers.get(event.type)
+                    if handler:
+                        await self.invoke(handler, event)
+                    try:
+                        await self.mark_event_read(event)
+                    except RuntimeError as e:
+                        pass
 
     async def process_room_invite_events(self, rooms: dict):
         pass

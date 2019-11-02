@@ -1,5 +1,5 @@
 # TODO Add Room class
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 from datetime import datetime, timedelta
 from collections import deque
 
@@ -42,14 +42,14 @@ class Room:
         self.heroes: Optional[List[str]] = None
         self.joined_member_count: Optional[int] = None
         self.invited_member_count: Optional[int] = None
-        self.read_receipts: Dict[str, Dict[str, int]] = {}
+        self.read_receipts: Dict[str, Tuple[str, int]] = {}
         self.message_cache = deque(maxlen=1000)
 
     def update_read_receipts(self, receipts: Dict[str, Dict[str, Dict[str, Dict[str, int]]]]):
         for event_id, receipt in receipts.items():
             users = receipt['m.read']
             for user, time in users.items():
-                self.read_receipts[user] = {event_id: time['ts']}
+                self.read_receipts[user] = (event_id, time['ts'])
 
     async def update_state(self, state_event=None):
         from .events import StateEvent
