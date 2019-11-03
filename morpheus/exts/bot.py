@@ -1,5 +1,7 @@
 import asyncio
-from typing import Union, Optional, Dict
+from typing import Union, Optional, Dict, List
+from inspect import isawaitable
+from argparse import ArgumentParser
 
 from morpheus.core.client import Client
 from morpheus.core.room import Room
@@ -17,6 +19,8 @@ class Bot(Client):
     ):
         self.loop = asyncio.get_event_loop()
         super(Bot, self).__init__(prefix=prefix, homeserver=homeserver)
+        self.commands: Dict[str, dict] = {}
+        self.aliases: Dict[str, str] = {}
 
     def run(self, user_id: str = None, password: str = None, token: str = None, loop: Optional[asyncio.AbstractEventLoop] = None):
         loop = loop or self.loop or asyncio.get_event_loop()
@@ -61,10 +65,37 @@ class Bot(Client):
         called_with, body = raw_body.split(' ', 1)
         return Context.get_context(event, prefix, called_with, body)
 
-    async def check_event(self, event):
+    async def process_command(self, event):
         ctx = await self.get_context(event)
+        if not ctx:
+            return
+
+        command_name = self.aliases.get(ctx.called_with)
+        if not command_name:
+            return
+        command_dict = self.commands.get(command_name)
+        if not command_dict:
+            del self.aliases[ctx.called_with]
+        parser: ArgumentParser = command_dict['parser']
+        command = command_dict['command']
+        args = parser.parse_args(ctx.body.split(' '))
 
     def listener(self, name=None):
         def decorator(func):
             self.register_handler(name, func)
         return decorator
+
+    def add_command(self, name: str, func: callable):
+        if not callable(func):
+            raise TypeError('Command function must be callable')
+
+        if not isawaitable(func):
+            raise TypeError('Command function must be a coroutine')
+
+        if not name:
+            name = func.__name__
+
+        if name in self.commands:
+            raise RuntimeWarning(f'Command {name} has already been registered')
+
+        self.commands[name] = func
