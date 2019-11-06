@@ -14,6 +14,7 @@ class Context:
         self.content: ContentBase = content
         self.called_with: str = called_with
         self.body: str = body
+        self.extra_params: list = []
 
     async def send_text(self, body: str, formatted_body: str = None, format_type: str = 'org.matrix.custom.html'):
         await self.client.send_text(self.room, body, formatted_body, format_type)

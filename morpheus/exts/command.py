@@ -70,7 +70,7 @@ class Command:
         args = []
         kwargs = {}
         if args_list:
-            params = self.parser.parse_args(args_list)
+            params, ctx.extra_params = self.parser.parse_known_args(args_list)
 
             for key, value in iterator:
                 value: inspect.Parameter
