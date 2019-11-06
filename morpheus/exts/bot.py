@@ -62,7 +62,9 @@ class Bot(Client):
         if not raw_body.startswith(prefix):
             return None
         raw_body = raw_body.lstrip(prefix)
-        called_with, body = raw_body.split(' ', 1)
+        body_list = raw_body.split(' ', 1)
+        called_with = body_list[0]
+        body = body_list[1] if len(body_list) > 1 else None
         return Context.get_context(event, prefix, called_with, body)
 
     async def process_command(self, event):
@@ -73,7 +75,7 @@ class Bot(Client):
         command = self.commands.get(ctx.called_with)
         if not command:
             return
-        await command.invoke(ctx, ctx.body.split(' '))
+        await command.invoke(ctx, ctx.body.split(' ') if ctx.body else None)
 
     def listener(self, name=None):
         def decorator(func):

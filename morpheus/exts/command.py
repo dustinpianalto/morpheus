@@ -69,13 +69,16 @@ class Command:
 
         args = []
         kwargs = {}
-        params = self.parser.parse_args(args_list)
+        if args_list:
+            params = self.parser.parse_args(args_list)
 
-        for key, value in iterator:
-            value: inspect.Parameter
-            if value.kind == value.VAR_POSITIONAL or value.kind == value.POSITIONAL_OR_KEYWORD:
-                args.extend(params.__dict__[key])
-            else:
-                kwargs[key] = params.__dict__[key]
+            for key, value in iterator:
+                value: inspect.Parameter
+                if value.kind == value.VAR_POSITIONAL or value.kind == value.POSITIONAL_OR_KEYWORD:
+                    args.extend(params.__dict__[key])
+                else:
+                    kwargs[key] = params.__dict__[key]
 
-        await self.function(ctx, *args, **kwargs)
+            await self.function(ctx, *args, **kwargs)
+        else:
+            await self.function(ctx)
