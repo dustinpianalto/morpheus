@@ -8,8 +8,8 @@ class Command:
         if not callable(function):
             raise RuntimeError('The function to make a command from must be a callable')
 
-        # if not inspect.isawaitable(function):
-        #     raise RuntimeError('The function to make a command from must be a coroutine')
+        if not inspect.iscoroutinefunction(function):
+            raise RuntimeError('The function to make a command from must be a coroutine')
 
         self.extension = extension
         self.signature = inspect.signature(function)
@@ -53,7 +53,7 @@ class Command:
 
         return parser
 
-    def invoke(self, ctx, args_list):
+    async def invoke(self, ctx, args_list):
         iterator = iter(self.signature.parameters.items())
 
         if self.extension:
@@ -78,4 +78,4 @@ class Command:
             else:
                 kwargs[key] = params.__dict__[key]
 
-        self.function(ctx, *args, **kwargs)
+        await self.function(ctx, *args, **kwargs)

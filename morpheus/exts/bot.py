@@ -9,6 +9,7 @@ from morpheus.core.utils import maybe_coroutine
 from morpheus.core.events import RoomEvent
 from morpheus.core.content import MessageContentBase
 from .context import Context
+from .command import Command
 
 
 class Bot(Client):
@@ -19,8 +20,7 @@ class Bot(Client):
     ):
         self.loop = asyncio.get_event_loop()
         super(Bot, self).__init__(prefix=prefix, homeserver=homeserver)
-        self.commands: Dict[str, dict] = {}
-        self.aliases: Dict[str, str] = {}
+        self.commands: Dict[str, Command] = {}
 
     def run(self, user_id: str = None, password: str = None, token: str = None, loop: Optional[asyncio.AbstractEventLoop] = None):
         loop = loop or self.loop or asyncio.get_event_loop()
@@ -70,32 +70,38 @@ class Bot(Client):
         if not ctx:
             return
 
-        command_name = self.aliases.get(ctx.called_with)
-        if not command_name:
+        command = self.commands.get(ctx.called_with)
+        if not command:
             return
-        command_dict = self.commands.get(command_name)
-        if not command_dict:
-            del self.aliases[ctx.called_with]
-        parser: ArgumentParser = command_dict['parser']
-        command = command_dict['command']
-        args = parser.parse_args(ctx.body.split(' '))
+        await command.invoke(ctx, ctx.body.split(' '))
 
     def listener(self, name=None):
         def decorator(func):
             self.register_handler(name, func)
         return decorator
 
-    def add_command(self, name: str, func: callable):
-        if not callable(func):
-            raise TypeError('Command function must be callable')
-
-        if not isawaitable(func):
-            raise TypeError('Command function must be a coroutine')
-
+    def add_command(self, name: str, aliases: list, func: callable):
         if not name:
             name = func.__name__
 
-        if name in self.commands:
+        if name.startswith('_'):
+            raise RuntimeWarning(f'Command names cannot start with an underscore')
+
+        if aliases is None:
+            aliases = []
+
+        if not isinstance(aliases, list) or any([not isinstance(alias, str) for alias in aliases]):
+            raise RuntimeWarning(f'Aliases must be a list of strings.')
+
+        if name in self.commands or any([alias in self.commands for alias in aliases]):
             raise RuntimeWarning(f'Command {name} has already been registered')
 
-        self.commands[name] = func
+        command = Command(func)
+        self.commands[name] = command
+        for alias in aliases:
+            self.commands[alias] = command
+
+    def command(self, name: Optional[str] = None, aliases: Optional[list] = None):
+        def decorator(func):
+            self.add_command(name=name, aliases=aliases, func=func)
+        return decorator
