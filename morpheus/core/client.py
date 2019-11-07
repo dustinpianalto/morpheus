@@ -192,7 +192,7 @@ class Client:
 
     async def send_text(self, room: Room, body: str, formatted_body: str = None, format_type: str = None):
         content = {
-            'msgtype': 'm.text',
+            'msgtype': 'm.notice',
             'body': body
         }
         if formatted_body and format_type:

@@ -78,7 +78,6 @@ class Command:
                     args.extend(params.__dict__[key])
                 else:
                     kwargs[key] = params.__dict__[key]
-
             await self.function(ctx, *args, **kwargs)
         else:
             await self.function(ctx)

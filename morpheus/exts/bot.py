@@ -68,6 +68,9 @@ class Bot(Client):
         return Context.get_context(event, prefix, called_with, body)
 
     async def process_command(self, event):
+        if not event.content.msgtype == 'm.text':
+            return
+
         ctx = await self.get_context(event)
         if not ctx:
             return
