@@ -29,6 +29,8 @@ class EventBase:
             content_dict = {'options': event_dict['content']}
         else:
             content_dict = event_dict['content']
+            if event_dict['type'] == 'm.sticker':
+                content_dict['msgtype'] = 'm.sticker'
 
         if content_dict.get('m.relates_to'):
             if content_dict['m.relates_to'].get('m.in_reply_to'):

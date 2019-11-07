@@ -54,6 +54,11 @@ class MImageContent(MessageContentBase):
 
 
 @dataclass
+class MStickerContent(MImageContent):
+    msgtype = 'm.sticker'
+
+
+@dataclass
 class MFileContent(MessageContentBase):
     msgtype = "m.file"
     filename: str
@@ -193,6 +198,7 @@ content_dispatcher = {
     "m.emote": MEmoteContent,
     "m.notice": MNoticeContent,
     "m.image": MImageContent,
+    "m.sticker": MStickerContent,
     "m.file": MFileContent,
     "m.location": MLocationContent,
     "m.video": MVideoContent,
