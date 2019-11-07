@@ -1,4 +1,3 @@
-# TODO Add Room class
 from typing import List, Optional, Dict, Tuple
 from datetime import datetime, timedelta
 from collections import deque
@@ -15,7 +14,7 @@ from .content import (
     MRoomRelatedGroupsContent,
     MRoomTopicContent,
 )
-from .utils import PreviousRoom
+from .utils import PreviousRoom, DequeDict
 
 
 class Room:
@@ -43,7 +42,7 @@ class Room:
         self.joined_member_count: Optional[int] = None
         self.invited_member_count: Optional[int] = None
         self.read_receipts: Dict[str, Tuple[str, int]] = {}
-        self.message_cache = deque(maxlen=1000)
+        self.message_cache = DequeDict(max=1000)
 
     def update_read_receipts(self, receipts: Dict[str, Dict[str, Dict[str, Dict[str, int]]]]):
         for event_id, receipt in receipts.items():

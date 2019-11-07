@@ -122,8 +122,8 @@ class Client:
                 if isinstance(event, StateEvent):
                     await room.update_state(event)
                 elif isinstance(event, MessageEvent):
-                    if event not in room.message_cache:
-                        room.message_cache.append(event)
+                    if event.event_id not in room.message_cache:
+                        room.message_cache[event.event_id] = event
                 if room.read_receipts[self.user_id][1] < event.origin_server_ts:
                     handlers = self.event_dispatchers.get(event.type)
                     if handlers:

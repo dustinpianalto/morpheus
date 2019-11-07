@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 from inspect import isawaitable
+from collections import OrderedDict
 
 
 @dataclass
@@ -108,3 +109,15 @@ async def maybe_coroutine(func, *args, **kwargs):
 
 def notification_power_levels_default_factory():
     return {'room': 50}
+
+
+class DequeDict(OrderedDict):
+    def __init__(self, *args, max: int = 0, **kwargs):
+        self._max = max
+        super(DequeDict, self).__init__(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        OrderedDict.__setitem__(self, key, value)
+        if self._max > 0:
+            if len(self) > self._max:
+                self.popitem(False)
