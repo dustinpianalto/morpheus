@@ -18,7 +18,8 @@ class EventBase:
     def from_dict(cls, client: Client, event_dict: dict):
         from .content import content_dispatcher
         if event_dict['type'] == 'm.room.message':
-            content_class = content_dispatcher[event_dict['content']['msgtype']]
+            content_class = content_dispatcher[event_dict['content']['msgtype']] \
+                if event_dict['content'].get('msgtype') else ContentBase
         else:
             content_class = content_dispatcher[event_dict['type']]
 
@@ -41,11 +42,16 @@ class EventBase:
 
         del event_dict['content']
 
-        return cls(
-            client=client,
-            content=content_class(**content_dict),
-            **event_dict
-        )
+        try:
+            return cls(
+                client=client,
+                content=content_class(**content_dict),
+                **event_dict
+            )
+        except Exception as e:
+            print(content_dict)
+            print(event_dict)
+            raise e
 
 
 @dataclass

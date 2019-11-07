@@ -144,7 +144,7 @@ class MRoomPowerLevelsContent(ContentBase):
 
 @dataclass
 class MRoomRedactionContent(ContentBase):
-    reason: str
+    reason: Optional[str] = None
 
 
 @dataclass

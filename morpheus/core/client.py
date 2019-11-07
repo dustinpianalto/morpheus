@@ -160,6 +160,8 @@ class Client:
             return EventBase.from_dict(self, event)
         elif event["type"] == "m.room.message":
             return MessageEvent.from_dict(self, event)
+        elif event['type'] == 'm.room.redaction':
+            return RedactionEvent.from_dict(self, event)
         else:
             return RoomEvent.from_dict(self, event)
 
